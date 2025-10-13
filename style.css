@@ -1,46 +1,129 @@
-/* 沖縄らしいデザインのためのカスタムCSS */
-body {
-    font-family: 'Noto Sans JP', sans-serif;
+/* style.css (ncloud.com参考デザイン) */
+
+/* --- 基本設定とカラーパレット --- */
+:root {
+    /* カラーパレット: 信頼感のあるネイビーとアクセントのグリーン */
+    --c-primary: #007aff;      /* プライマリ（ブルー） */
+    --c-dark-blue: #1e293b;  /* ダークブルー（ネイビー） */
+    --c-accent: #10b981;       /* アクセント（グリーン） */
+    --c-accent-hover: #059669; /* アクセント（ホバー時） */
+    --c-light-gray: #f8fafc;  /* 明るい背景色 */
+    --c-text: #334155;         /* 本文テキスト */
+    --c-text-light: #64748b;   /* 薄いテキスト */
+    
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
-/* 琉球紅型風の背景パターン */
-.bingata-pattern {
-    background-color: #f0f8ff;
-    opacity: 0.8;
-    background-image:
-        radial-gradient(circle at center center, #ff7f50, #f0f8ff),
-        repeating-radial-gradient(circle at center center, #ff7f50, #ff7f50, 10px, transparent 20px, transparent 10px);
-    background-blend-mode: multiply;
-    filter: blur(2px) contrast(1.1);
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--c-text);
+    background-color: #fff; /* 基本背景は白 */
 }
 
 .font-yuji {
     font-family: 'Yuji Syuku', serif;
 }
 
-/* スクロール時のフェードインアニメーション */
+
+/* --- ヘッダー --- */
+header a.logo-font {
+    color: var(--c-dark-blue);
+}
+
+
+/* --- ヒーローセクション --- */
+#hero {
+    background: linear-gradient(45deg, var(--c-dark-blue), #3b82f6);
+}
+
+
+/* --- セクション共通スタイル --- */
+.section-title {
+    color: var(--c-dark-blue);
+    font-weight: 700;
+}
+
+
+/* --- プロフィールセクション --- */
+.profile-card {
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid #e2e8f0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+
+/* --- サービスセクション --- */
+#service {
+    background-color: var(--c-light-gray);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 抽象的なドットパターン */
+.dot-pattern {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background-image: radial-gradient(var(--c-primary) 1px, transparent 1px);
+    background-size: 10px 10px;
+    opacity: 0.3;
+}
+
+.service-card {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+.service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-card-hover);
+}
+.service-icon-bg {
+    background: linear-gradient(135deg, var(--c-primary), #60a5fa);
+}
+
+
+/* --- お問い合わせセクション --- */
+#contact {
+    background-color: var(--c-dark-blue);
+}
+
+.cta-button {
+    display: inline-block;
+    background-color: var(--c-accent);
+    color: white;
+    font-weight: bold;
+    padding: 14px 32px;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s;
+}
+.cta-button:hover {
+    background-color: var(--c-accent-hover);
+    transform: translateY(-2px);
+}
+
+
+/* --- アニメーション (既存のまま) --- */
 .fade-in {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
 }
-
 .fade-in.is-visible {
     opacity: 1;
     transform: translateY(0);
-}
-
-/* 名刺風カード */
-.business-card {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    transition: transform 0.3s ease-in-out;
-}
-
-.business-card:hover {
-    transform: translateY(-5px) scale(1.02);
-}
-
-/* スムーズスクロール */
-html {
-    scroll-behavior: smooth;
 }
