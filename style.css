@@ -1,0 +1,46 @@
+/* 沖縄らしいデザインのためのカスタムCSS */
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+/* 琉球紅型風の背景パターン */
+.bingata-pattern {
+    background-color: #f0f8ff;
+    opacity: 0.8;
+    background-image:
+        radial-gradient(circle at center center, #ff7f50, #f0f8ff),
+        repeating-radial-gradient(circle at center center, #ff7f50, #ff7f50, 10px, transparent 20px, transparent 10px);
+    background-blend-mode: multiply;
+    filter: blur(2px) contrast(1.1);
+}
+
+.font-yuji {
+    font-family: 'Yuji Syuku', serif;
+}
+
+/* スクロール時のフェードインアニメーション */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-in.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 名刺風カード */
+.business-card {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s ease-in-out;
+}
+
+.business-card:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+/* スムーズスクロール */
+html {
+    scroll-behavior: smooth;
+}
