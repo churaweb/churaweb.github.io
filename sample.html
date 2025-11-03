@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blueprint Style Site - Chura WEB</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 'IBM Plex Mono' (Bold 700) をロゴ用に追加 (Oswaldから変更) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;700&family=IBM+Plex+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-color: #06b6d4; /* cyan-500 */
+        }
+        /* フォント設定 */
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #1f2937; /* gray-800 */
+            color: #d1d5db; /* gray-300 */
+            /* ★ スクロールイベントが多発してもスムーズに動くよう
+               メインスレッド外でのスクロール（可能であれば）をブラウザに示唆 */
+            overscroll-behavior: none;
+        }
+        /* モノスペースフォント (ナビゲーションやアクセント用) */
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        /* ロゴ用フォント (IBM Plex Mono に変更) */
+        .font-logo {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 0.05em; /* 文字間隔を少し広げる */
+            text-transform: uppercase; /* 大文字に統一 */
+        }
+
+        /* 背景のグリッド線 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        /* 図面風フレーム */
+        .blueprint-frame {
+            position: relative;
+            padding: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .blueprint-frame::before,
+        .blueprint-frame::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: var(--accent-color);
+            transition: all 0.3s ease;
+        }
+        .blueprint-frame::before {
+            top: 0; left: 0;
+            border-top: 2px solid;
+            border-left: 2px solid;
+        }
+        .blueprint-frame::after {
+            bottom: 0; right: 0;
+            border-bottom: 2px solid;
+            border-right: 2px solid;
+        }
+        
+        /* セクションタイトル */
+        .section-title {
+            color: var(--accent-color);
+        }
+
+        /* ボタンのスタイル */
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            position: relative;
+            overflow: hidden;
+            transition: color 0.4s ease-in-out;
+            z-index: 1;
+        }
+        .btn-outline::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            transform: translateX(-100%);
+            transition: transform 0.4s ease-in-out;
+            z-index: -1;
+        }
+        .btn-outline:hover {
+            color: #1f2937;
+        }
+        .btn-outline:hover::before {
+            transform: translateX(0);
+        }
+
+        /* フェードインアニメーション */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* ナビゲーションメニュー */
+        #nav-menu {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        /* --- ハンバーガーアイコンのトグルスタイル --- */
+        /* 3本線のためのラッパーボタン */
+        #nav-toggle {
+            /* flex関連のクラスをHTML側で削除し、ここで中央揃えを制御 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 3本線共通スタイル */
+        #nav-toggle span {
+            /* HTML側で absolute を指定 */
+            transition: all 0.3s ease-in-out;
+        }
+        
+        /* 初期状態 (ハンバーガー) */
+        #nav-toggle span:nth-child(1) {
+            transform: translateY(-7px);
+        }
+        #nav-toggle span:nth-child(2) {
+            transform: translateY(0); /* 真ん中 */
+        }
+        #nav-toggle span:nth-child(3) {
+            transform: translateY(7px);
+        }
+
+        /* 開いた状態 (Xマーク) */
+        #nav-toggle.menu-open span:nth-child(1) {
+            transform: translateY(0) rotate(45deg); /* 上のバーを回転 */
+        }
+        #nav-toggle.menu-open span:nth-child(2) {
+            transform: translateX(20px); /* 真ん中のバーをフェードアウト */
+            opacity: 0;
+        }
+        #nav-toggle.menu-open span:nth-child(3) {
+            transform: translateY(0) rotate(-45deg); /* 下のバーを回転 */
+        }
+        /* --- ここまでハンバーガーアイコン --- */
+
+        /* --- ★ 沖縄風パターンのアニメーション (ここから追加) --- */
+        @keyframes slow-pan {
+            0% { background-position: 0% 0%; }
+            /* 120pxの倍数 (240px) にして、パターンがずれるようにする */
+            100% { background-position: 240px 240px; } 
+        }
+
+        #top::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            /* ミンサー織（五つと四つ）と波模様をイメージしたSVGパターン (薄いシアン色) */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2306b6d4' stroke-width='0.7' opacity='0.15'%3E%3C!-- ミンサー五つ --%3E%3Crect x='10' y='50' width='8' height='8'/%3E%3Crect x='30' y='50' width='8' height='8'/%3E%3Crect x='50' y='50' width='8' height='8'/%3E%3Crect x='70' y='50' width='8' height='8'/%3E%3Crect x='90' y='50' width='8' height='8'/%3E%3C!-- ミンサー四つ --%3E%3Crect x='20' y='65' width='8' height='8'/%3E%3Crect x='40' y='65' width='8' height='8'/%3E%3Crect x='60' y='65' width='8' height='8'/%3E%3Crect x='80' y='65' width='8' height='8'/%3E%3C!-- 波模様 --%3E%3Cpath d='M 0 20 Q 15 10, 30 20 T 60 20 T 90 20 T 120 20' /%3E%3Cpath d='M 0 30 Q 15 20, 30 30 T 60 30 T 90 30 T 120 30' /%3E%3Cpath d='M 0 90 Q 15 80, 30 90 T 60 90 T 90 90 T 120 90' /%3E%3Cpath d='M 0 100 Q 15 90, 30 100 T 60 100 T 90 100 T 120 100' /%3E%3C/g%3E%3C/svg%E");
+            background-size: 120px 120px; /* パターンのサイズ */
+            opacity: 1; /* SVG側でopacityを指定しているので1でOK */
+            animation: slow-pan 60s linear infinite; /* 60秒かけてゆっくり動かす */
+            z-index: 0; /* テキストの後ろ、背景グリッドの前 (body::before は z-index: -1) */
+        }
+        /* --- ★ ここまで追加 --- */
+
+        /* --- ★ 吹き出しスタイル (ここから追加) --- */
+        /* ★★★ 浮遊アニメーションを追加 ★★★ */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            /* ★★★ 動きを -15px から -25px に変更 ★★★ */
+            50% { transform: translateY(-25px); } /* 25px上に移動 */
+            100% { transform: translateY(0px); }
+        }
+
+        .chat-bubble {
+            background-color: #374151; /* gray-700 */
+            /* ★ position: relative を absolute に変更 */
+            position: absolute;
+            /* ★ p-5 を p-4 に変更 */
+            padding: 1rem; 
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            /* ★ アニメーションを適用 */
+            animation: float 6s ease-in-out infinite;
+            /* ★ z-index を追加 (コンテンツ(z-20)より後ろ、パターン(z-0)より手前) */
+            z-index: 10;
+        }
+        /* ★★★ 吹き出しの矢印 (::after) を削除 ★★★ */
+        /* .chat-bubble::after { ... } の定義を削除 */
+        /* --- ★ ここまで追加 --- */
+        
+        /* --- ★★★ HUD（計器パネル）のスタイル (ここから変更) ★★★ --- */
+        /* ★ #hud-panel 関連のスタイルをすべて削除 */
+
+        /* 共通のHUDテキストスタイル */
+        .hud-element {
+            position: fixed;
+            z-index: 50; /* ヘッダーと同じ */
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.75rem; /* text-xs */
+            color: var(--accent-color);
+            /* パネル自体はクリックや選択の邪魔にならないようにする */
+            pointer-events: none;
+            user-select: none;
+            /* 背景を透明にし、テキストにわずかな影を加えて読みやすくする */
+            background-color: transparent;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); 
+        }
+
+        /* 左下のHUD要素コンテナ */
+        #hud-bottom-left {
+            bottom: 1rem;
+            left: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem; /* space-y-1 */
+        }
+
+        /* 右下のHUD要素コンテナ */
+        #hud-bottom-right {
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem; /* space-y-1 */
+            min-width: 150px; /* 幅を少し確保 */
+        }
+
+        /* 各読み取り値のスタイル */
+        .hud-readout-item {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .hud-readout-item span:first-child {
+            color: #d1d5db; /* gray-300 ラベルの色 */
+            margin-right: 0.5rem; /* mr-2 */
+        }
+
+        /* スクロールバーの外枠 (右下用) */
+        #hud-scroll-bar {
+            width: 100%; /* 親(#hud-bottom-right)の幅に合わせる */
+            height: 8px; /* h-2 */
+            background-color: rgba(255, 255, 255, 0.1); /* bg-white/10 */
+            border: 1px solid var(--accent-color);
+            overflow: hidden; 
+        }
+
+        /* スクロールバーの中身（塗りつぶし） */
+        #hud-scroll-bar-fill {
+            width: 0%; /* JSで更新 */
+            height: 100%;
+            background-color: var(--accent-color);
+            transition: width 0.1s linear; /* スムーズに動かす */
+        }
+        /* --- ★★★ ここまでHUDスタイル変更 ★★★ --- */
+
+        /* --- ★ ヒーローロゴ用ブループリント装飾 (ここから追加) --- */
+        .hero-logo-frame {
+            position: relative;
+            display: inline-block; /* 中央揃えを維持しつつ、::before/::after の基準点にする */
+            padding: 0.25rem 0.5rem; /* text-lg に合わせて少しパディング (py-1 px-2) */
+        }
+        .hero-logo-frame::before,
+        .hero-logo-frame::after {
+            content: '';
+            position: absolute;
+            width: 10px; /* 装飾のサイズ */
+            height: 10px; /* 装飾のサイズ */
+            border-color: var(--accent-color); /* アクセントカラーで常時表示 */
+        }
+        .hero-logo-frame::before {
+            top: 0; /* padding の外枠線 (top) */
+            left: 0; /* padding の外枠線 (left) */
+            border-top: 1px solid; /* 線の太さを 1px に */
+            border-left: 1px solid;
+        }
+        .hero-logo-frame::after {
+            bottom: 0; /* padding の外枠線 (bottom) */
+            right: 0; /* padding の外枠線 (right) */
+            border-bottom: 1px solid;
+            border-right: 1px solid;
+        }
+        /* --- ★ ここまで追加 --- */
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- ===== ヘダー/ナビゲーション ===== -->
+    <!-- ★ p-6 を p-4 md:p-6 に変更 -->
+    <header class="fixed top-0 left-0 right-0 z-50 p-4 md:p-6 flex justify-between items-start">
+        <!-- ロゴ -->
+        <!-- .font-mono を削除し、 .font-logo を追加 -->
+        <!-- href を #top に変更 -->
+        <a href="#top" class="font-logo text-lg border border-gray-500 px-4 py-2 hover:border-cyan-400 hover:text-cyan-400 transition-colors">
+            Chura WEB
+        </a>
+
+        <!-- ナビゲーション開閉ボタン -->
+        <div class="relative">
+            <!-- ボタンのクラスを変更: flex-col, space-y-1 を削除し、relative を追加 -->
+            <button id="nav-toggle" class="w-16 h-16 border border-gray-500 group relative">
+                <!-- 3本線: それぞれに absolute を追加 -->
+                <span class="block w-8 h-px bg-gray-400 group-hover:bg-cyan-400 absolute"></span>
+                <span class="block w-8 h-px bg-gray-400 group-hover:bg-cyan-400 absolute"></span>
+                <span class="block w-8 h-px bg-gray-400 group-hover:bg-cyan-400 absolute"></span>
+            </button>
+            <!-- ナビゲーションメニュー (構成を変更) -->
+            <nav id="nav-menu" class="absolute top-full right-0 mt-2 w-56 bg-gray-800/90 backdrop-blur-sm border border-gray-600 p-4 opacity-0 invisible transform -translate-y-2">
+                <a href="#top" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_top</a>
+                <a href="#about" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_about</a>
+                <a href="#services" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_services</a>
+                <a href="#profile" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_profile</a>
+                <a href="#release" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_release</a>
+                <a href="#contact" class="block py-2 px-3 font-mono hover:text-cyan-400 transition-colors">_contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ★ main に relative を追加 -->
+    <main class="relative overflow-x-hidden">
+
+        <!-- ★★★ 吹き出しを <main> の直下に移動 ★★★ -->
+        <!-- 2. 周囲に配置する吹き出し (PC/lg以上で表示) -->
+        
+        <!-- 吹き出し 1 (ヒーローエリア) -->
+        <!-- ★ top-16 を top-[15vh] (ビューポートの高さの15%) に変更 -->
+        <div class="chat-bubble absolute top-[15vh] left-8 w-48 hidden lg:block" style="animation-delay: 0s;">
+            <p class="text-gray-300">"DXと言われても、何から手をつければ良いか分からない..."</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+
+        <!-- 吹き出し 2 (ヒーローエリア) -->
+        <!-- ★ top-32 を top-[35vh] に変更 -->
+        <div class="chat-bubble absolute top-[35vh] right-8 w-48 hidden lg:block" style="animation-delay: -2s;">
+            <p class="text-gray-300">"今のサイトが古くてスマホで見づらい。売上に繋げたい。"</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+        
+        <!-- 吹き出し 3 (ヒーローエリア) -->
+        <!-- ★ bottom-24 を top-[65vh] に変更 / left-12 を left-16 に戻す -->
+        <div class="chat-bubble absolute top-[65vh] left-16 w-48 hidden lg:block" style="animation-delay: -4s;">
+            <p class="text-gray-300">"予約システムと顧客管理がバラバラで効率が悪い。"</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+
+        <!-- ★ 吹き出し 4 (追加) (Aboutセクション付近) -->
+        <div class="chat-bubble absolute top-[120vh] right-16 w-48 hidden lg:block" style="animation-delay: -1s;">
+            <p class="text-gray-300">"WEBサイトを作ったきり、放置してしまっている..."</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+
+        <!-- ★ 吹き出し 5 (追加) (Servicesセクション付近) -->
+        <div class="chat-bubble absolute top-[180vh] left-16 w-48 hidden lg:block" style="animation-delay: -3s;">
+            <p class="text-gray-300">"沖縄の文化を、もっと世界に発信したい。"</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+
+        <!-- ★ 吹き出し 6 (追加) (Profileセクション付近) -->
+        <div class="chat-bubble absolute top-[240vh] right-12 w-48 hidden lg:block" style="animation-delay: -5s;">
+            <p class="text-gray-300">"ITに強い人材が社内におらず、相談相手がいない。"</p>
+            <!-- 座標はJSによってここに追加されます -->
+        </div>
+        <!-- ★★★ 吹き出しの移動ここまで ★★★ -->
+
+
+        <!-- ===== ヒーローセクション (IDを top に変更) ===== -->
+        <!-- ★ relative と overflow-hidden を追加 -->
+        <!-- ★ z-10 を z-20 に変更 (吹き出し(z-10)より手前に) -->
+        <section id="top" class="min-h-screen flex items-center justify-center text-center relative overflow-hidden z-20">
+            <!-- ★ z-index を追加してパターンより手前に表示 -->
+            <!-- ★ px-6 を px-4 に変更 -->
+            <!-- ★★★ 構造変更: 吹き出しを内部に含めるため、レイアウトを調整 ★★★ -->
+            <!-- ★ w-full max-w-6xl mx-auto を追加 -->
+            <div class="px-4 fade-in-section relative z-10 w-full max-w-6xl mx-auto py-24"> <!-- ★ 上下の余白(py-24)を追加 -->
+
+                <!-- 1. 中央のメインコンテンツ -->
+                <div class="max-w-2xl mx-auto">
+                    <p class="font-mono text-cyan-400 mb-4">// START_SEQUENCE</p>
+                    <!-- ★ 見出しを変更 -->
+                    <!-- ★ text-4xl md:text-6xl を text-4xl sm:text-5xl md:text-6xl に変更 -->
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-100 mb-4 leading-tight">沖縄の未来をITで支える</h1>
+                    <!-- ★ 説明文を変更 -->
+                    <!-- ★ text-lg md:text-xl を text-base sm:text-lg md:text-xl に変更 -->
+                    <p class="text-base sm:text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">私たちは沖縄に根ざしたITアーキテクトとして、<br class="md:hidden">技術と情熱で島の可能性を描き出します。</p>
+                    
+                    <!-- ★★★ 「接触を開始」ボタンを削除し、会社名に変更 ★★★ -->
+                    <!-- <a href="#contact" class="btn-outline font-mono py-3 px-6 text-base sm:py-3 sm:px-8 sm:text-lg">
+                        [ 接触を開始 ]
+                    </a> -->
+                    <!-- ★★★ hero-logo-frame クラスを追加 ★★★ -->
+                    <p class="font-logo text-lg text-cyan-400 mt-8 hero-logo-frame">
+                        Chura WEB
+                    </p>
+                    <!-- ★★★ 変更ここまで ★★★ -->
+
+                </div>
+
+                <!-- 2. 周囲に配置する吹き出し (PC/lg以上で表示) -->
+                <!-- ★★★ このセクションの吹き出しは <main> 直下へ移動 ★★★ -->
+                
+                <!-- 3. モバイル用の吹き出し (lg未満で表示) -->
+                <!-- ★★★ モバイル用の吹き出しコンテナ (<div class="lg:hidden ...">) を丸ごと削除 ★★★ -->
+                
+                <!-- ★★★ 構造変更ここまで ★★★ -->
+            </div>
+        </section>
+        
+        <!-- ===== 区切り線 ===== -->
+        <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+        <div class="container mx-auto px-4 md:px-6">
+            <div class="border-t border-dashed border-gray-600"></div>
+        </div>
+
+        <!-- ===== ★ お客様の声セクション (新設) ===== -->
+        <!-- ★★★ このセクション (id="issues") を丸ごと削除 ★★★ -->
+        <!--
+        <section id="issues" class="py-16 sm:py-20 md:py-24">
+            <div class="container mx-auto px-4 md:px-6">
+        ... (中略) ...
+            </div>
+        </section>
+        -->
+        <!-- ===== ★ ここまで新設 ===== -->
+
+
+        <!-- ===== ABOUTセクション ===== -->
+        <!-- ★ py-20 md:py-32 を py-16 sm:py-20 md:py-32 に変更 -->
+        <!-- ★ セクション番号を変更 02 -> 01 -->
+        <!-- ★ relative z-20 を追加 -->
+        <section id="about" class="py-16 sm:py-20 md:py-32 relative z-20">
+            <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="fade-in-section">
+                    <!-- ★ text-sm md:text-base を追加 -->
+                    <!-- ★ セクション番号を変更 02 -> 01 -->
+                    <p class="font-mono section-title mb-2 text-sm md:text-base">// SECTION 01: ABOUT</p>
+                    <div class="blueprint-frame">
+                        <!-- ★ p-8 md:p-12 を p-6 sm:p-8 md:p-12 に変更 -->
+                        <div class="p-6 sm:p-8 md:p-12">
+                            <div class="flex flex-col md:flex-row items-center gap-10">
+                                <div class="md:w-1/2">
+                                    <div class="relative">
+                                        <img src="https://placehold.co/600x400/1f2937/06b6d4?text=IMAGE" alt="About Us" class="w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/6b7280?text=Image+Not+Found'">
+                                        <div class="absolute -top-4 -left-4 font-mono text-sm text-gray-500">
+                                            <p>X: 34.985</p>
+                                            <p>Y: 135.758</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md:w-1/2">
+                                    <!-- ★ text-3xl を text-2xl sm:text-3xl に変更 -->
+                                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">ビジョンの設計者として</h2>
+                                    <p class="text-gray-400 leading-relaxed">
+                                        私たちは単なる制作会社ではありません。クライアントのビジョンを深く理解し、その実現可能性を技術的な視点から検証し、最適なソリューションを設計するアーキテクト集団です。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SERVICESセクション ===== -->
+        <!-- ★ py-20 md:py-32 を py-16 sm:py-20 md:py-32 に変更 -->
+        <!-- ★ セクション番号を変更 03 -> 02 -->
+        <!-- ★ relative z-20 を追加 -->
+        <section id="services" class="py-16 sm:py-20 md:py-32 relative z-20">
+            <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="fade-in-section">
+                     <!-- ★ text-sm md:text-base を追加 -->
+                     <!-- ★ セクション番号を変更 03 -> 02 -->
+                     <p class="font-mono section-title mb-2 text-right text-sm md:text-base">// SECTION 02: SERVICES</p>
+                     <div class="grid md:grid-cols-3 gap-px bg-gray-700 border border-gray-700">
+                        <!-- ★ p-8 を p-6 md:p-8 に変更 -->
+                        <div class="bg-gray-800 p-6 md:p-8">
+                            <!-- ★ text-xl を text-lg sm:text-xl に変更 -->
+                            <h3 class="font-mono text-lg sm:text-xl text-white mb-2">[01] WEB_ARCHITECTURE</h3>
+                            <p class="text-gray-400">堅牢な情報設計と拡張性の高いシステム構築。</p>
+                        </div>
+                        <!-- ★ p-8 を p-6 md:p-8 に変更 -->
+                        <div class="bg-gray-800 p-6 md:p-8">
+                            <!-- ★ text-xl を text-lg sm:text-xl に変更 -->
+                            <h3 class="font-mono text-lg sm:text-xl text-white mb-2">[02] UI/UX_ENGINEERING</h3>
+                            <p class="text-gray-400">ユーザー心理を分析し、直感的な操作性を設計。</p>
+                        </div>
+                         <!-- ★ p-8 を p-6 md:p-8 に変更 -->
+                        <div class="bg-gray-800 p-6 md:p-8">
+                            <!-- ★ text-xl を text-lg sm:text-xl に変更 -->
+                            <h3 class="font-mono text-lg sm:text-xl text-white mb-2">[03] SYSTEM_INTEGRATION</h3>
+                            <p class="text-gray-400">既存システムとの連携、API設計と実装。</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ===== PROFILEセクション (旧WORKSセクションを流用・変更) ===== -->
+        <!-- ★ py-20 md:py-32 を py-16 sm:py-20 md:py-32 に変更 -->
+        <!-- ★ セクション番号を変更 04 -> 03 -->
+        <!-- ★ relative z-20 を追加 -->
+        <section id="profile" class="py-16 sm:py-20 md:py-32 relative z-20">
+            <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+            <div class="container mx-auto px-4 md:px-6">
+                 <div class="fade-in-section">
+                    <!-- ★ text-sm md:text-base を追加 -->
+                    <!-- ★ セクション番号を変更 04 -> 03 -->
+                    <p class="font-mono section-title mb-2 text-sm md:text-base">// SECTION 03: PROFILE</p>
+                    <!-- 'about'セクションのレイアウトを流用 -->
+                    <div class="blueprint-frame">
+                        <!-- ★ p-8 md:p-12 を p-6 sm:p-8 md:p-12 に変更 -->
+                        <div class="p-6 sm:p-8 md:p-12">
+                            <div class="flex flex-col md:flex-row-reverse items-center gap-10"> <!-- 画像を右 (row-reverse) に変更 -->
+                                <div class="md:w-1/2">
+                                    <div class="relative">
+                                        <img src="https://placehold.co/600x400/1f2937/06b6d4?text=PROFILE" alt="Profile" class="w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/6b7280?text=Image+Not+Found'">
+                                        <div class="absolute -top-4 -right-4 font-mono text-sm text-gray-500"> <!-- 位置を右上に変更 -->
+                                            <p>STATUS: ACTIVE</p>
+                                            <p>ROLE: CEO / Architect</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="md:w-1/2">
+                                    <!-- ★ text-3xl を text-2xl sm:text-3xl に変更 -->
+                                    <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">Taro Yamada (山田 太郎)</h2>
+                                    <p class="text-gray-400 leading-relaxed mb-4">
+                                        沖縄県出身。デジタルアーキテクトとして10年以上の経験を持つ。複雑な課題をシンプルな構造に分解し、美しく機能するWEBシステムを設計することを使命とする。
+                                    </p>
+                                    <p class="text-gray-400 leading-relaxed">
+                                        趣味は深海魚のドキュメンタリー鑑賞と、古い設計図の収集。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== RELEASEセクション (新設・旧WORKSのレイアウトを流用) ===== -->
+        <!-- ★ py-20 md:py-32 を py-16 sm:py-20 md:py-32 に変更 -->
+        <!-- ★ セクション番号を変更 05 -> 04 -->
+        <!-- ★ relative z-20 を追加 -->
+        <section id="release" class="py-16 sm:py-20 md:py-32 relative z-20">
+            <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+            <div class="container mx-auto px-4 md:px-6">
+                 <div class="fade-in-section">
+                    <!-- ★ text-sm md:text-base を追加 -->
+                    <!-- ★ セクション番号を変更 05 -> 04 -->
+                    <p class="font-mono section-title mb-2 text-right text-sm md:text-base">// SECTION 04: RELEASE</p> <!-- 右寄せに変更 -->
+                    
+                    <!-- ★★★ モバイルでリスト形式、md以上でグリッド形式になるよう構造を変更 ★★★ -->
+                    <!-- ★ コンテナを (grid -> space-y-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:space-y-0) に変更 -->
+                    <div class="space-y-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:space-y-0">
+                        
+                        <!-- Release Item 1 -->
+                        <!-- ★ 構造変更: p-3, flex, md:block を追加 -->
+                        <div class="border border-gray-700 p-3 group flex md:block">
+                             <!-- 画像ラッパー: モバイル=固定幅, md以上=幅いっぱい -->
+                             <div class="w-32 md:w-full flex-shrink-0 overflow-hidden mr-4 md:mr-0">
+                                <img src="https://placehold.co/600x400/111827/FFFFFF?text=RELEASE" alt="Release 1" class="w-full h-auto md:h-auto transform md:group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='https://placehold.co/600x400/111827/6b7280?text=Image+Not+Found'">
+                             </div>
+                             <!-- テキスト: モバイル=paddingなし, md以上=padding・枠線あり -->
+                             <div class="flex-grow">
+                                <p class="font-mono text-sm md:mt-3 md:p-3 md:border-t md:border-gray-700">RELEASE [2025.10.01]: 新サービス「Blueprint AI」を発表しました。</p>
+                             </div>
+                        </div>
+
+                         <!-- Release Item 2 -->
+                        <!-- ★ 構造変更: p-3, flex, md:block を追加 -->
+                        <div class="border border-gray-700 p-3 group flex md:block">
+                             <!-- 画像ラッパー: モバイル=固定幅, md以上=幅いっぱい -->
+                             <div class="w-32 md:w-full flex-shrink-0 overflow-hidden mr-4 md:mr-0">
+                                <img src="https://placehold.co/600x400/111827/FFFFFF?text=NEWS" alt="News 1" class="w-full h-auto md:h-auto transform md:group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='https://placehold.co/600x400/111827/6b7280?text=Image+Not+Found'">
+                             </div>
+                             <!-- テキスト: モバイル=paddingなし, md以上=padding・枠線あり -->
+                             <div class="flex-grow">
+                                <p class="font-mono text-sm md:mt-3 md:p-3 md:border-t md:border-gray-700">NEWS [2025.09.15]: メディアAに弊社代表のインタビューが掲載されました。</p>
+                             </div>
+                        </div>
+
+                         <!-- Release Item 3 -->
+                        <!-- ★ 構造変更: p-3, flex, md:block を追加 -->
+                        <div class="border border-gray-700 p-3 group flex md:block">
+                             <!-- 画像ラッパー: モバイル=固定幅, md以上=幅いっぱい -->
+                             <div class="w-32 md:w-full flex-shrink-0 overflow-hidden mr-4 md:mr-0">
+                                <img src="https://placehold.co/600x400/111827/FFFFFF?text=AWARD" alt="Award 1" class="w-full h-auto md:h-auto transform md:group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null;this.src='https://placehold.co/600x400/111827/6b7280?text=Image+Not+Found'">
+                             </div>
+                             <!-- テキスト: モバイル=paddingなし, md以上=padding・枠線あり -->
+                             <div class="flex-grow">
+                                <p class="font-mono text-sm md:mt-3 md:p-3 md:border-t md:border-gray-700">AWARD [2025.09.01]: デザインアワード「Design Blueprint 2025」にて金賞を受賞。</p>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- ★★★ 変更ここまで ★★★ -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CONTACTセクション (セクション番号を変更) ===== -->
+        <!-- ★ py-20 md:py-32 を py-16 sm:py-20 md:py-32 に変更 -->
+        <!-- ★ セクション番号を変更 06 -> 05 -->
+        <!-- ★ relative z-20 を追加 -->
+        <section id="contact" class="py-16 sm:py-20 md:py-32 relative z-20">
+             <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+             <div class="container mx-auto px-4 md:px-6">
+                 <div class="fade-in-section">
+                    <!-- ★ text-sm md:text-base を追加 -->
+                    <!-- ★ セクション番号を変更 06 -> 05 -->
+                    <p class="font-mono section-title mb-2 text-right text-sm md:text-base">// SECTION 05: CONTACT</p>
+                    <div class="max-w-3xl mx-auto text-center">
+                        <!-- ★ タイトルを変更 -->
+                        <!-- ★ text-3xl を text-2xl sm:text-3xl に変更 -->
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">お気軽にご相談ください</h2>
+                        <!-- ★ 説明文を変更 -->
+                        <p class="text-gray-400 mb-8">
+                            WEBサイト制作、システム開発、技術的なご相談など、どんな些細なことでも構いません。
+                            まずはお気軽にご連絡ください。下記ボタンよりメーラーが起動します。
+                        </p>
+                         <!-- フォームを mailto リンクボタンに変更 -->
+                         <!-- ★ text-lg を text-base sm:text-lg に、 px-8 を px-6 sm:px-8 に変更 -->
+                         <a href="mailto:chura.web.business@gmail.com" class="btn-outline font-mono py-3 px-6 text-base sm:py-3 sm:px-8 sm:text-lg w-full max-w-md mx-auto block">
+                            [ chura.web.business@gmail.com ]
+                        </a>
+                         <!-- フォームメッセージ用の <p> は削除 -->
+                    </div>
+                 </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-12">
+        <!-- ★ px-6 を px-4 md:px-6 に変更 -->
+        <div class="container mx-auto px-4 md:px-6 text-center text-gray-500 font-mono text-sm">
+            <p>// END_OF_FILE</p>
+            <p class="mt-4">&copy; <span id="current-year"></span> Chura WEB. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- ★★★ HUD（計器パネル）のHTML (ここから変更) ★★★ -->
+    <!-- 左下のHUD要素 -->
+    <div id="hud-bottom-left" class="hud-element">
+        <div class="hud-readout-item">
+            <span>POS_XY:</span>
+            <span id="hud-mouse-coords">0, 0</span>
+        </div>
+        <div class="hud-readout-item">
+            <span>VEL_Y:</span>
+            <span id="hud-mouse-velocity">0.0 px/s</span>
+        </div>
+    </div>
+
+    <!-- 右下のHUD要素 -->
+    <div id="hud-bottom-right" class="hud-element">
+        <div class="hud-readout-item">
+            <span>SCRL_Y:</span>
+            <span id="hud-scroll-y">0px</span>
+        </div>
+        <!-- スクロール深度計 -->
+        <div classclass="w-full"> <!-- w-full to match min-width of parent -->
+            <span class="text-gray-300 text-xs">LOAD:</span>
+            <div id="hud-scroll-bar">
+                <div id="hud-scroll-bar-fill"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ★★★ ここまでHUDのHTML変更 ★★★ -->
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ----- ナビゲーションメニュー -----
+        const navToggle = document.getElementById('nav-toggle');
+        const navMenu = document.getElementById('nav-menu');
+        navToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('opacity-0');
+            navMenu.classList.toggle('invisible');
+            navMenu.classList.toggle('-translate-y-2');
+            
+            // ★ トグルボタンに 'menu-open' クラスを付け外し
+            navToggle.classList.toggle('menu-open');
+        });
+        document.addEventListener('click', () => {
+            if (!navMenu.classList.contains('opacity-0')) {
+                navMenu.classList.add('opacity-0', 'invisible', '-translate-y-2');
+                
+                // ★ メニューを閉じるときはボタンの 'menu-open' クラスも削除
+                navToggle.classList.remove('menu-open');
+            }
+        });
+        navMenu.addEventListener('click', (e) => e.stopPropagation());
+
+        // ----- フェードインアニメーション -----
+        const fadeObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in-section').forEach(section => {
+            fadeObserver.observe(section);
+        });
+
+        // ----- フッター年号 -----
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // ----- お問い合わせフォーム (JavaScript部分を削除) -----
+        /* const contactForm = document.getElementById('contact-form');
+        ... (省略) ...
+        });
+        */
+
+        // ----- ★★★ 吹き出しのXY座標の表示 (ここから変更) ★★★ -----
+        
+        // 1. すべての吹き出し要素を取得
+        const bubbles = document.querySelectorAll('.chat-bubble');
+
+        // 2. 各吹き出しに座標表示用の <span> を追加
+        bubbles.forEach((bubble, index) => {
+            const coordsSpan = document.createElement('span');
+            // Tailwindクラスでスタイルを指定 (吹き出しの -bottom-6 (1.5rem) 下、左端に配置)
+            coordsSpan.className = 'absolute -bottom-6 left-0 font-mono text-xs text-cyan-400 pointer-events-none user-select-none whitespace-nowrap';
+            // 識別用のIDを付与
+            coordsSpan.id = `bubble-coords-${index}`; 
+            coordsSpan.textContent = 'X: 0, Y: 0'; // 初期値
+            bubble.appendChild(coordsSpan);
+        });
+
+        // 3. 座標をリアルタイムで更新する関数 (名前を変更)
+        function updateDynamicUI() {
+            // --- 既存の吹き出し座標ロジック ---
+            bubbles.forEach((bubble, index) => {
+                const coordsSpan = document.getElementById(`bubble-coords-${index}`);
+                if (coordsSpan) {
+                    // getBoundingClientRect() でビューポート基準の現在座標を取得
+                    const rect = bubble.getBoundingClientRect();
+                    // 座標を整数に丸める
+                    const x = Math.round(rect.left);
+                    const y = Math.round(rect.top);
+                    
+                    // テキストを更新
+                    coordsSpan.textContent = `X: ${x}, Y: ${y}`;
+                }
+            });
+            
+            // --- ★★★ 新規のマウス速度ロジック (ここから追加) ★★★ ---
+            const now = Date.now();
+            const deltaTime = now - lastMousePos.time;
+            
+            // 速度計算 (0除算を避ける)
+            if (deltaTime > 0) {
+                // ★ hudMouseVelocity が存在するか確認
+                if (hudMouseVelocity) { 
+                    const distance = Math.hypot(currentMousePos.x - lastMousePos.x, currentMousePos.y - lastMousePos.y);
+                    // (ピクセル / ミリ秒) * 1000 = ピクセル / 秒
+                    const velocity = (distance / deltaTime) * 1000; 
+                    hudMouseVelocity.textContent = `${velocity.toFixed(1)} px/s`;
+                }
+            }
+            
+            // 最後の位置情報を更新
+            lastMousePos = { 
+                x: currentMousePos.x, 
+                y: currentMousePos.y, 
+                time: now 
+            };
+            // --- ★★★ マウス速度ロジックここまで ★★★ ---
+
+
+            // 次のアニメーションフレームで再度この関数を呼ぶ
+            requestAnimationFrame(updateDynamicUI);
+        }
+
+        // ----- ★★★ HUD（計器パネル）用のロジック (ここから追加) ★★★ -----
+
+        // 1. HUD要素への参照を取得
+        const hudScrollY = document.getElementById('hud-scroll-y');
+        const hudScrollFill = document.getElementById('hud-scroll-bar-fill');
+        const hudMouseCoords = document.getElementById('hud-mouse-coords');
+        const hudMouseVelocity = document.getElementById('hud-mouse-velocity');
+
+        // 2. マウス速度計算用の変数
+        let currentMousePos = { x: 0, y: 0 };
+        let lastMousePos = { x: 0, y: 0, time: Date.now() };
+
+        // 3. スクロールイベントリスナー
+        document.addEventListener('scroll', () => {
+            // ★ 要素が存在するか確認してから更新
+            if (hudScrollY) {
+                const scrollY = Math.round(window.scrollY);
+                // スクロールY座標を更新
+                hudScrollY.textContent = `${scrollY}px`;
+            }
+
+            if (hudScrollFill) {
+                // スクロール深度計を更新
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                // 0除算を避ける
+                const percent = maxScroll > 0 ? (scrollY / maxScroll) * 100 : 0; 
+                hudScrollFill.style.width = `${percent}%`;
+            }
+
+        }, { passive: true }); // スクロールパフォーマンス向上のため passive: true を指定
+
+        // 4. マウス移動イベントリスナー
+        document.addEventListener('mousemove', (e) => {
+            // マウス座標を更新
+            currentMousePos = { x: e.clientX, y: e.clientY };
+            // ★ 要素が存在するか確認してから更新
+            if (hudMouseCoords) {
+                hudMouseCoords.textContent = `${e.clientX}, ${e.clientY}`;
+            }
+        });
+        
+        // ----- ★★★ ここまでHUDロジック ★★★ -----
+
+
+        // 4. アニメーションループを開始
+        // 吹き出しが存在する場合のみループを開始
+        if (bubbles.length > 0 || document.getElementById('hud-mouse-velocity')) {
+            // 関数名を変更してループを開始
+            requestAnimationFrame(updateDynamicUI);
+        }
+        
+        // ----- ★★★ ここまで変更 ★★★ -----
+    });
+    </script>
+</body>
+</html>
