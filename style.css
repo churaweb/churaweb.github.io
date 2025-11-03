@@ -1,0 +1,294 @@
+:root {
+    --accent-color: #06b6d4; /* cyan-500 */
+}
+/* フォント設定 */
+body {
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    background-color: #1f2937; /* gray-800 */
+    color: #d1d5db; /* gray-300 */
+    /* ★ スクロールイベントが多発してもスムーズに動くよう
+       メインスレッド外でのスクロール（可能であれば）をブラウザに示唆 */
+    overscroll-behavior: none;
+}
+/* モノスペースフォント (ナビゲーションやアクセント用) */
+.font-mono {
+    font-family: 'Roboto Mono', monospace;
+}
+/* ロゴ用フォント (IBM Plex Mono に変更) */
+.font-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    letter-spacing: 0.05em; /* 文字間隔を少し広げる */
+    text-transform: uppercase; /* 大文字に統一 */
+}
+
+/* 背景のグリッド線 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -1;
+}
+
+/* 図面風フレーム */
+.blueprint-frame {
+    position: relative;
+    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.blueprint-frame::before,
+.blueprint-frame::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--accent-color);
+    transition: all 0.3s ease;
+}
+.blueprint-frame::before {
+    top: 0; left: 0;
+    border-top: 2px solid;
+    border-left: 2px solid;
+}
+.blueprint-frame::after {
+    bottom: 0; right: 0;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+}
+
+/* セクションタイトル */
+.section-title {
+    color: var(--accent-color);
+}
+
+/* ボタンのスタイル */
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    position: relative;
+    overflow: hidden;
+    transition: color 0.4s ease-in-out;
+    z-index: 1;
+}
+.btn-outline::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-color);
+    transform: translateX(-100%);
+    transition: transform 0.4s ease-in-out;
+    z-index: -1;
+}
+.btn-outline:hover {
+    color: #1f2937;
+}
+.btn-outline:hover::before {
+    transform: translateX(0);
+}
+
+/* フェードインアニメーション */
+.fade-in-section {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.fade-in-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ナビゲーションメニュー */
+#nav-menu {
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+/* --- ハンバーガーアイコンのトグルスタイル --- */
+/* 3本線のためのラッパーボタン */
+#nav-toggle {
+    /* flex関連のクラスをHTML側で削除し、ここで中央揃えを制御 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* 3本線共通スタイル */
+#nav-toggle span {
+    /* HTML側で absolute を指定 */
+    transition: all 0.3s ease-in-out;
+}
+
+/* 初期状態 (ハンバーガー) */
+#nav-toggle span:nth-child(1) {
+    transform: translateY(-7px);
+}
+#nav-toggle span:nth-child(2) {
+    transform: translateY(0); /* 真ん中 */
+}
+#nav-toggle span:nth-child(3) {
+    transform: translateY(7px);
+}
+
+/* 開いた状態 (Xマーク) */
+#nav-toggle.menu-open span:nth-child(1) {
+    transform: translateY(0) rotate(45deg); /* 上のバーを回転 */
+}
+#nav-toggle.menu-open span:nth-child(2) {
+    transform: translateX(20px); /* 真ん中のバーをフェードアウト */
+    opacity: 0;
+}
+#nav-toggle.menu-open span:nth-child(3) {
+    transform: translateY(0) rotate(-45deg); /* 下のバーを回転 */
+}
+/* --- ここまでハンバーガーアイコン --- */
+
+/* --- ★ 沖縄風パターンのアニメーション (ここから追加) --- */
+@keyframes slow-pan {
+    0% { background-position: 0% 0%; }
+    /* 120pxの倍数 (240px) にして、パターンがずれるようにする */
+    100% { background-position: 240px 240px; } 
+}
+
+#top::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    /* ミンサー織（五つと四つ）と波模様をイメージしたSVGパターン (薄いシアン色) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2306b6d4' stroke-width='0.7' opacity='0.15'%3E%3C!-- ミンサー五つ --%3E%3Crect x='10' y='50' width='8' height='8'/%3E%3Crect x='30' y='50' width='8' height='8'/%3E%3Crect x='50' y='50' width='8' height='8'/%3E%3Crect x='70' y='50' width='8' height='8'/%3E%3Crect x='90' y='50' width='8' height='8'/%3E%3C!-- ミンサー四つ --%3E%3Crect x='20' y='65' width='8' height='8'/%3E%3Crect x='40' y='65' width='8' height='8'/%3E%3Crect x='60' y='65' width='8' height='8'/%3E%3Crect x='80' y='65' width='8' height='8'/%3E%3C!-- 波模様 --%3E%3Cpath d='M 0 20 Q 15 10, 30 20 T 60 20 T 90 20 T 120 20' /%3E%3Cpath d='M 0 30 Q 15 20, 30 30 T 60 30 T 90 30 T 120 30' /%3E%3Cpath d='M 0 90 Q 15 80, 30 90 T 60 90 T 90 90 T 120 90' /%3E%3Cpath d='M 0 100 Q 15 90, 30 100 T 60 100 T 90 100 T 120 100' /%3E%3C/g%3E%3C/svg%E");
+    background-size: 120px 120px; /* パターンのサイズ */
+    opacity: 1; /* SVG側でopacityを指定しているので1でOK */
+    animation: slow-pan 60s linear infinite; /* 60秒かけてゆっくり動かす */
+    z-index: 0; /* テキストの後ろ、背景グリッドの前 (body::before は z-index: -1) */
+}
+/* --- ★ ここまで追加 --- */
+
+/* --- ★ 吹き出しスタイル (ここから追加) --- */
+/* ★★★ 浮遊アニメーションを追加 ★★★ */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    /* ★★★ 動きを -15px から -25px に変更 ★★★ */
+    50% { transform: translateY(-25px); } /* 25px上に移動 */
+    100% { transform: translateY(0px); }
+}
+
+.chat-bubble {
+    background-color: #374151; /* gray-700 */
+    /* ★ position: relative を absolute に変更 */
+    position: absolute;
+    /* ★ p-5 を p-4 に変更 */
+    padding: 1rem; 
+    border-radius: 0.5rem; /* rounded-lg */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* ★ アニメーションを適用 */
+    animation: float 6s ease-in-out infinite;
+    /* ★ z-index を追加 (コンテンツ(z-20)より後ろ、パターン(z-0)より手前) */
+    z-index: 10;
+}
+/* ★★★ 吹き出しの矢印 (::after) を削除 ★★★ */
+/* .chat-bubble::after { ... } の定義を削除 */
+/* --- ★ ここまで追加 --- */
+
+/* --- ★★★ HUD（計器パネル）のスタイル (ここから変更) ★★★ --- */
+/* ★ #hud-panel 関連のスタイルをすべて削除 */
+
+/* 共通のHUDテキストスタイル */
+.hud-element {
+    position: fixed;
+    z-index: 50; /* ヘッダーと同じ */
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.75rem; /* text-xs */
+    color: var(--accent-color);
+    /* パネル自体はクリックや選択の邪魔にならないようにする */
+    pointer-events: none;
+    user-select: none;
+    /* 背景を透明にし、テキストにわずかな影を加えて読みやすくする */
+    background-color: transparent;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); 
+}
+
+/* 左下のHUD要素コンテナ */
+#hud-bottom-left {
+    bottom: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem; /* space-y-1 */
+}
+
+/* 右下のHUD要素コンテナ */
+#hud-bottom-right {
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem; /* space-y-1 */
+    min-width: 150px; /* 幅を少し確保 */
+}
+
+/* 各読み取り値のスタイル */
+.hud-readout-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.hud-readout-item span:first-child {
+    color: #d1d5db; /* gray-300 ラベルの色 */
+    margin-right: 0.5rem; /* mr-2 */
+}
+
+/* スクロールバーの外枠 (右下用) */
+#hud-scroll-bar {
+    width: 100%; /* 親(#hud-bottom-right)の幅に合わせる */
+    height: 8px; /* h-2 */
+    background-color: rgba(255, 255, 255, 0.1); /* bg-white/10 */
+    border: 1px solid var(--accent-color);
+    overflow: hidden; 
+}
+
+/* スクロールバーの中身（塗りつぶし） */
+#hud-scroll-bar-fill {
+    width: 0%; /* JSで更新 */
+    height: 100%;
+    background-color: var(--accent-color);
+    transition: width 0.1s linear; /* スムーズに動かす */
+}
+/* --- ★★★ ここまでHUDスタイル変更 ★★★ --- */
+
+/* --- ★ ヒーローロゴ用ブループリント装飾 (ここから追加) --- */
+.hero-logo-frame {
+    position: relative;
+    display: inline-block; /* 中央揃えを維持しつつ、::before/::after の基準点にする */
+    padding: 0.25rem 0.5rem; /* text-lg に合わせて少しパディング (py-1 px-2) */
+}
+.hero-logo-frame::before,
+.hero-logo-frame::after {
+    content: '';
+    position: absolute;
+    width: 10px; /* 装飾のサイズ */
+    height: 10px; /* 装飾のサイズ */
+    border-color: var(--accent-color); /* アクセントカラーで常時表示 */
+}
+.hero-logo-frame::before {
+    top: 0; /* padding の外枠線 (top) */
+    left: 0; /* padding の外枠線 (left) */
+    border-top: 1px solid; /* 線の太さを 1px に */
+    border-left: 1px solid;
+}
+.hero-logo-frame::after {
+    bottom: 0; /* padding の外枠線 (bottom) */
+    right: 0; /* padding の外枠線 (right) */
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+/* --- ★ ここまで追加 --- */
