@@ -325,3 +325,9 @@ body::before {
     border-right: 1px solid;
 }
 /* --- ★ ここまで追加 --- */
+h1 {
+    /* font-size: 48px; ← 元の指定 */
+    font-size: clamp(30px, 8vw, 48px); /* 最小30px, 基本8vw, 最大48px */
+    margin-bottom: 10px;
+    white-space: nowrap; /* clamp() を使っても改行されそうな場合は念のため追加 */
+}
