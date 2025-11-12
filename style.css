@@ -167,8 +167,41 @@ body::before {
     background-size: 120px 120px; /* パターンのサイズ */
     opacity: 1; /* SVG側でopacityを指定しているので1でOK */
     animation: slow-pan 60s linear infinite; /* 60秒かけてゆっくり動かす */
-    z-index: 0; /* テキストの後ろ、背景グリッドの前 (body::before は z-index: -1) */
+    
+    /* ★ 変更: z-index を 1 に設定 (地図より手前に表示) */
+    z-index: 1; 
 }
+
+/* --- ★★★ 沖縄の地図を背景中央に追加 (ここから追加) ★★★ --- */
+#top::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+
+    /* 1. 画像のパスを指定 */
+    background-image: url('img/okinawa_map.png');
+    
+    /* 2. 中央に配置 */
+    background-position: center center;
+    
+    /* 3. 繰り返しなし */
+    background-repeat: no-repeat;
+    
+    /* 4. レスポンシブ対応 (アスペクト比を維持し、要素内に収める) */
+    background-size: contain; 
+
+    /* 5. 透明度 (パターンより少し控えめに設定) */
+    opacity: 0.6; 
+    
+    /* 6. レイヤー順序 (ミンサー織パターン(z-1)より後ろ) */
+    z-index: 0;
+}
+/* --- ★★★ ここまで追加 ★★★ --- */
 /* --- ★ ここまで追加 --- */
 
 /* --- ★ 吹き出しスタイル (ここから追加) --- */
